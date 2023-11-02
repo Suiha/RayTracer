@@ -21,7 +21,7 @@ RayTracer/[Dd]ebug/
 RayTracer/[Dd]ebugPublic/
 RayTracer/[Rr]elease/
 RayTracer/[Rr]eleases/
-RayTracer/x64/
+RayTracer/obj/x64/
 RayTracer/x86/
 RayTracer/[Ww][Ii][Nn]32/
 RayTracer/[Aa][Rr][Mm]/
