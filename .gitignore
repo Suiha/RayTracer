@@ -17,21 +17,21 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Oo]ut/
-[Ll]og/
-[Ll]ogs/
+RayTracer/[Dd]ebug/
+RayTracer/[Dd]ebugPublic/
+RayTracer/[Rr]elease/
+RayTracer/[Rr]eleases/
+RayTracer/x64/
+RayTracer/x86/
+RayTracer/[Ww][Ii][Nn]32/
+RayTracer/[Aa][Rr][Mm]/
+RayTracer/[Aa][Rr][Mm]64/
+RayTracer/bld/
+#[Bb]in/
+RayTracer/[Oo]bj/
+RayTracer/[Oo]ut/
+RayTracer/[Ll]og/
+RayTracer/[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -42,32 +42,32 @@ bld/
 Generated\ Files/
 
 # MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
+RayTracer/[Tt]est[Rr]esult*/
+RayTracer/[Bb]uild[Ll]og.*
 
 # NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
+RayTracer/*.VisualState.xml
+RayTracer/TestResult.xml
+RayTracer/nunit-*.xml
 
 # Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
+RayTracer/[Dd]ebugPS/
+RayTracer/[Rr]eleasePS/
 dlldata.c
 
 # Benchmark Results
-BenchmarkDotNet.Artifacts/
+RayTracer/BenchmarkDotNet.Artifacts/
 
 # .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
+RayTracer/project.lock.json
+RayTracer/project.fragment.lock.json
+RayTracer/artifacts/
 
 # ASP.NET Scaffolding
-ScaffoldingReadMe.txt
+RayTracer/ScaffoldingReadMe.txt
 
 # StyleCop
-StyleCopReport.xml
+RayTracer/StyleCopReport.xml
 
 # Files built by Visual Studio
 *_i.c
