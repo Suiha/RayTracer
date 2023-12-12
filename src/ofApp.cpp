@@ -2,7 +2,7 @@
 
 void ofApp::setup() {
 	printf("Setup\n");
-	ofSetBackgroundColor(ofColor::black);
+	ofSetBackgroundColor(ofColor::gray);
 	theCam = &mainCam;
 
 	// camera setup
@@ -13,34 +13,23 @@ void ofApp::setup() {
 	sideCam.lookAt(glm::vec3(0, 0, 0));
 	sideCam.setNearClip(.1);
 
-	previewCam.setPosition(renderCam.view.position);
-	previewCam.lookAt(renderCam.aim);
-	previewCam.setNearClip(.1);
+	renderCam.setPosition(mainCam.getPosition());
+	renderCam.lookAt(mainCam.getLookAtDir());
+	renderCam.setNearClip(.1);
+	renderCam.disableMouseInput();
 
 
-	// plane: origin point, normal vector, color
-	Plane* backWall = new Plane(glm::vec3(0, 8, -10), glm::vec3(0, 0, 1), ofColor::gray); // vertical plane, facing forward
-	scene.push_back(backWall);
-	Plane* leftWall = new Plane(glm::vec3(-5, 8, 0), glm::vec3(1, 0, 0), ofColor::gray); // vertical plane, facing right
-	scene.push_back(leftWall);
-	Plane* rightWall = new Plane(glm::vec3(5, 8, 0), glm::vec3(-1, 0, 0), ofColor::gray); // vertical plane, facing left
-	scene.push_back(rightWall);
-	Plane* floor = new Plane(glm::vec3(0, -2, 0), glm::vec3(0, 1, 0), ofColor::sandyBrown); // horizontal plane, facing up
-	scene.push_back(floor);	
-
-	// create scene
-	Sphere* sphere0 = new Sphere(glm::vec3(4, 1, -5), 2.0, ofColor::mediumPurple);
-	//scene.push_back(sphere0);
-	Sphere* sphere1 = new Sphere(glm::vec3(0, 1, -2), 2.0, ofColor::lightBlue);
-	scene.push_back(sphere1);
-	Sphere* sphere2 = new Sphere(glm::vec3(-2.5, 0, 0), 1.0, ofColor::pink);
-	scene.push_back(sphere2);
+	// pre-render light
+	sceneLight.enable();
+	sceneLight.setPosition(0, 10, 0);
+	sceneLight.setDiffuseColor(ofColor(255.f, 255.f, 255.f));
+	sceneLight.setSpecularColor(ofColor(255.f, 255.f, 255.f));
 
 	// lights
-	addLight(new PointLight(glm::vec3(3, 30, 0), 400));
-	addLight(new PointLight(glm::vec3(-3, 20, 0), 200));
-	addLight(new PointLight(glm::vec3(4, 25, 0)));
-	areaLight = new AreaLight(glm::vec3(0, 30, 0), 10, 5, 5, 10, 10, 1);
+	addLight(new PointLight(glm::vec3(5, 8, 0), 200));
+	addLight(new PointLight(glm::vec3(-3, 10, 0), 100));
+	//addLight(new PointLight(glm::vec3(4, 20, 0)));
+	areaLight = new AreaLight(glm::vec3(0, 10, 0), 10, 5, 5, 10, 10, 1);
 	addLight(areaLight);
 
 	// gui
@@ -49,83 +38,96 @@ void ofApp::setup() {
 	// allocate space for rendered image
 	image.allocate(imageWidth, imageHeight, OF_IMAGE_COLOR);
 
-	// load texture maps to objects
-	if (!floor->diffuseMap.load("garage-paving/11_garage paving PBR texture_DIFF.jpg")) {
-		cout << "Ground Plane: error loading diffuse map" << endl;
-	}
-	if (!floor->specularMap.load("garage-paving/11_garage paving PBR texture_SPEC.jpg")) {
-		cout << "Ground Plane: error loading specular map" << endl;
-	}
+	// load texture maps
+	garageDiffuse.load("garage-paving/11_garage paving PBR texture_DIFF.jpg");
+	garageSpecular.load("garage-paving/11_garage paving PBR texture_SPEC.jpg");
+	brickDiffuse.load("brick-wall/38_brick wall_DIFF.jpg");
+	brickSpecular.load("brick-wall/38_brick wall_SPEC.jpg");
+	cobbleDiffuse.load("cobblestone-pavement/13_cobblestone pavement PBR texture_DIFFUSE.jpg");
+	cobbleSpecular.load("cobblestone-pavement/13_cobblestone pavement PBR texture_SPEC.jpg");
+	marbleDiffuse.load("marble-floor/44_marble floor_DIFF.jpg");
+	marbleSpecular.load("marble-floor/44_marble floor_SPEC.jpg");
+
+
+	// create scene objects (for testing) - remove later
+
+	// plane: origin point, normal vector, color
+	/*Plane* backWall = new Plane(glm::vec3(0, 8, -10), glm::vec3(0, 0, 1), ofColor::gray); // vertical plane, facing forward
+	scene.push_back(backWall);
+	Plane* leftWall = new Plane(glm::vec3(-5, 8, 0), glm::vec3(1, 0, 0), ofColor::gray); // vertical plane, facing right
+	scene.push_back(leftWall);
+	Plane* rightWall = new Plane(glm::vec3(5, 8, 0), glm::vec3(-1, 0, 0), ofColor::gray); // vertical plane, facing left
+	scene.push_back(rightWall);*/
+	Plane* floor = new Plane(glm::vec3(0, -2, 0), glm::vec3(0, 1, 0), ofColor::darkGray); // horizontal plane, facing up
+	scene.push_back(floor);	
+
+	// create scene
+	/*Sphere* sphere1 = new Sphere(glm::vec3(0, 1, -2), 2.0, ofColor::lightBlue);
+	scene.push_back(sphere1);
+	Sphere* sphere2 = new Sphere(glm::vec3(-2.5, 0, 0), 1.0, ofColor::pink);
+	scene.push_back(sphere2);*/
+
+	// assign texture maps to objects
+	/*floor->diffuseMap = garageDiffuse;
+	floor->specularMap = garageSpecular;
 	floor->numTiles = 1;
-	if (!backWall->diffuseMap.load("brick-wall/38_brick wall_DIFF.jpg")) {
-		cout << "Back Wall: error loading diffuse map" << endl;
-	}
-	if (!backWall->specularMap.load("brick-wall/38_brick wall_SPEC.jpg")) {
-		cout << "Back Wall:: error loading specular map" << endl;
-	}
+	floor->nTiles = 1;
+	floor->textureName = "Garage Paving";
+
+	backWall->diffuseMap = brickDiffuse;
+	backWall->specularMap = brickSpecular;
 	backWall->numTiles = 8;
-	if (!leftWall->diffuseMap.load("brick-wall/38_brick wall_DIFF.jpg")) {
-		cout << "Left Wall: error loading diffuse map" << endl;
-	}
-	if (!leftWall->specularMap.load("brick-wall/38_brick wall_SPEC.jpg")) {
-		cout << "Left Wall:: error loading specular map" << endl;
-	}
+	backWall->nTiles = 8;
+	backWall->textureName = "Brick Wall";
+
+	leftWall->diffuseMap = brickDiffuse;
+	leftWall->specularMap = brickSpecular;
 	leftWall->numTiles = 8;
-	if (!rightWall->diffuseMap.load("brick-wall/38_brick wall_DIFF.jpg")) {
-		cout << "Right Wall: error loading diffuse map" << endl;
-	}
-	if (!rightWall->specularMap.load("brick-wall/38_brick wall_SPEC.jpg")) {
-		cout << "Right Wall:: error loading specular map" << endl;
-	}
+	leftWall->nTiles = 8;
+	leftWall->textureName = "Brick Wall";
+
+	rightWall->diffuseMap = brickDiffuse;
+	rightWall->specularMap = brickSpecular;
 	rightWall->numTiles = 8;
-	if (!sphere1->diffuseMap.load("cobblestone-pavement/13_cobblestone pavement PBR texture_DIFFUSE.jpg")) {
-		cout << "Sphere1: error loading diffuse map" << endl;
-	}
-	if (!sphere1->specularMap.load("cobblestone-pavement/13_cobblestone pavement PBR texture_SPEC.jpg")) {
-		cout << "Sphere1: error loading specular map" << endl;
-	}
+	rightWall->nTiles = 8;
+	rightWall->textureName = "Brick Wall";
+
+	sphere1->diffuseMap = cobbleDiffuse;
+	sphere1->specularMap = cobbleSpecular;
 	sphere1->numTiles = sphere1->radius;
-	if (!sphere2->diffuseMap.load("marble-floor/44_marble floor_DIFF.jpg")) {
-		cout << "Sphere2: error loading diffuse map" << endl;
-	}
-	if (!sphere2->specularMap.load("marble-floor/44_marble floor_SPEC.jpg")) {
-		cout << "Sphere2: error loading specular map" << endl;
-	}
+	sphere1->nTiles = sphere1->radius;
+	sphere1->textureName = "Cobblestone Pavement";
+
+	sphere2->diffuseMap = marbleDiffuse;
+	sphere2->specularMap = marbleSpecular;
 	sphere2->numTiles = sphere2->radius;
+	sphere2->nTiles = sphere2->radius;
+	sphere2->textureName = "Marble Floor";*/
 }
 
 void ofApp::update() {
 	ambientLight.intensity = ambientLightIntensity;
 
-	lights[0]->intensity = light1Intensity;
-	lights[0]->position.x = light1X;
-	lights[0]->position.y = light1Y;
-	lights[0]->position.z = light1Z;
-
-	lights[1]->intensity = light2Intensity;
-	lights[1]->position.x = light2X;
-	lights[1]->position.y = light2Y;
-	lights[1]->position.z = light2Z;
-
-	lights[2]->intensity = light3Intensity;
-	lights[2]->position.x = light3X;
-	lights[2]->position.y = light3Y;
-	lights[2]->position.z = light3Z;
-
-	areaLight->intensity = areaLightIntensity;
-	areaLight->position.x = areaLightX;
-	areaLight->position.y = areaLightY;
-	areaLight->position.z = areaLightZ;
-	areaLight->width = areaLightWidth;
-	areaLight->height = areaLightHeight;
-	areaLight->nDivsWidth = areaLightDivWidth;
-	areaLight->nDivsHeight = areaLightDivHeight;
-	areaLight->nSamples = areaLightSamples;
+	if (objSelected()) {
+		// update parameters based on gui
+		selected[0]->updateGUI();
+	}
+	else {
+		// turn rotate and texture to false
+		noTexture = false;
+		garagePaving = false;
+		brickWall = false;
+		cobblestonePavement = false;
+		marbleFloor = false;
+	}
 }
 
 void ofApp::draw() {
 	ofEnableDepthTest();
 	theCam->begin();
+	
+	// add light to make scene order more clear
+	ofEnableLighting();
 
 	// draw scene objects
 	ofFill();
@@ -139,38 +141,105 @@ void ofApp::draw() {
 	ofPopMatrix();
 	ofNoFill();
 
+	ofDisableLighting();
+
 	// draw render view as white box
-	ofPushMatrix();
+	/*ofPushMatrix();
 	ofNoFill();
 	ofSetColor(ofColor::white);
 	renderCam.view.draw();
-	ofPopMatrix();
+	ofPopMatrix();*/
 
 	ofSetColor(ofColor::lightGray);
 	mainCam.draw();
+
 	theCam->end();
-
 	ofDisableDepthTest();
-
-	if (!bHide) gui.draw();
 
 	// rendered image
 	if (bRendered) {
 		image.draw((ofGetWindowWidth() / 2) - (imageWidth / 2), (ofGetWindowHeight() / 2) - (imageHeight / 2), imageWidth, imageHeight);
 	}
+
+	if (!bHide) {
+		gui.draw();
+		// draw gui panel of selected object
+		if (objSelected()) {
+			selected[0]->gui.setPosition(ofGetWindowWidth() - selected[0]->gui.getWidth(), 0);
+			selected[0]->gui.draw();
+		}
+	}
 }
 
-// listener functions
-void ofApp::lambertOnly(bool& val) {
-	if (lambertShading) phongShading = false;
-}
+// listener functions for textures
+// apply relevant textures to selected object & turn off other texture buttons
+void ofApp::applyNoTexture(bool& val) {
+	if (objSelected() && noTexture) {
+		selected[0]->textureName = "None";
+		selected[0]->diffuseMap.clear();
+		selected[0]->specularMap.clear();
 
-void ofApp::phongOnly(bool& val) {
-	if (phongShading) lambertShading = false;
+		brickWall = false;
+		garagePaving = false;
+		cobblestonePavement = false;
+		marbleFloor = false;
+	}
 }
+void ofApp::applyBrickWall(bool& val) {
+	if (objSelected() && brickWall) {
+		selected[0]->textureName = "Brick Wall";
+		selected[0]->diffuseMap = brickDiffuse;
+		selected[0]->specularMap = brickSpecular;
 
+		noTexture = false;
+		garagePaving = false;
+		cobblestonePavement = false;
+		marbleFloor = false;
+	}
+}
+void ofApp::applyCobblestone(bool& val) {
+	if (objSelected() && cobblestonePavement) {
+		selected[0]->textureName = "Cobblestone Pavement";
+		selected[0]->diffuseMap = cobbleDiffuse;
+		selected[0]->specularMap = cobbleSpecular;
+
+		noTexture = false;
+		garagePaving = false;
+		brickWall = false;
+		marbleFloor = false;
+	}
+}
+void ofApp::applyGaragePaving(bool& val) {
+	if (objSelected() && garagePaving) {
+		selected[0]->textureName = "Garage Paving";
+		selected[0]->diffuseMap = garageDiffuse;
+		selected[0]->specularMap = garageSpecular;
+
+		noTexture = false;
+		brickWall = false;
+		cobblestonePavement = false;
+		marbleFloor = false;
+	}
+}
+void ofApp::applyMarbleFloor(bool& val) {
+	if (objSelected() && marbleFloor) {
+		selected[0]->textureName = "Marble Floor";
+		selected[0]->diffuseMap = marbleDiffuse;
+		selected[0]->specularMap = marbleSpecular;
+
+		noTexture = false;
+		garagePaving = false;
+		brickWall = false;
+		cobblestonePavement = false;
+	}
+}
 void ofApp::keyPressed(int key) {
 	switch (key) {
+	case 'C':
+	case 'c':
+		if (mainCam.getMouseInputEnabled()) mainCam.disableMouseInput();
+		else mainCam.enableMouseInput();
+		break;
 	case 'h':
 		// show/hide gui
 		bHide = !bHide;
@@ -179,16 +248,26 @@ void ofApp::keyPressed(int key) {
 		// show/hide rendered image
 		bRendered = !bRendered;
 		break;
-	case 'r':
-		// render image with raytracing
+	case 'r': // render image with raytracing
 		rayTrace();
+		break;
+	case OF_KEY_TAB: // switch render cam to match current camera
+		updateRenderCam();
+		break;
+	case OF_KEY_BACKSPACE:
+	case OF_KEY_DEL:
+		if (objSelected()) {
+			Light* light = dynamic_cast<Light*>(selected[0]);
+			if (light) removeLight(light);
+			else removeSceneObject(selected[0]);
+		}
 		break;
 	case OF_KEY_F1:
 		theCam = &mainCam;
 		break;
 	case OF_KEY_F2:
 		// look at render cam
-		theCam = &previewCam;
+		theCam = &renderCam;
 		break;
 	case OF_KEY_F3:
 		theCam = &sideCam;
@@ -200,18 +279,165 @@ void ofApp::keyPressed(int key) {
 
 void ofApp::keyReleased(int key) {}
 void ofApp::mouseMoved(int x, int y) {}
-void ofApp::mouseDragged(int x, int y, int button) {}
-void ofApp::mousePressed(int x, int y, int button) {}
-void ofApp::mouseReleased(int x, int y, int button) {}
+
+//  This projects the mouse point in screen space (x, y) to a 3D point on a plane
+//  normal to the view axis of the camera passing through the point of the selected object.
+//  If no object selected, the plane passing through the world origin is used.
+//
+bool ofApp::mouseToDragPlane(int x, int y, glm::vec3& point) {
+	glm::vec3 p = theCam->screenToWorld(glm::vec3(x, y, 0));
+	glm::vec3 d = p - theCam->getPosition();
+	glm::vec3 dn = glm::normalize(d);
+
+	float dist;
+	glm::vec3 pos;
+	if (objSelected()) {
+		pos = selected[0]->position;
+	}
+	else pos = glm::vec3(0, 0, 0);
+	if (glm::intersectRayPlane(p, dn, pos, glm::normalize(theCam->getZAxis()), dist)) {
+		point = p + dn * dist;
+		return true;
+	}
+	return false;
+}
+
+void ofApp::mouseDragged(int x, int y, int button) {
+	if (objSelected() && bDrag) {
+		glm::vec3 point;
+		mouseToDragPlane(x, y, point);
+		
+		// update object position
+		selected[0]->position += point - lastPoint;
+		selected[0]->objPos = selected[0]->position; // change slider to reflect change
+
+		lastPoint = point;
+	}
+}
+
+void ofApp::mousePressed(int x, int y, int button) {
+
+	// if we are moving the camera around, don't allow selection
+	if (mainCam.getMouseInputEnabled()) return;
+
+	// clear selection list
+	for (auto obj : selected) obj->bSelected = false;
+	selected.clear();
+
+	// test if something selected
+	vector<SceneObject*> hits;
+
+	glm::vec3 p = theCam->screenToWorld(glm::vec3(x, y, 0));
+	glm::vec3 d = p - theCam->getPosition();
+	glm::vec3 dn = glm::normalize(d);
+
+	// check for selection of scene objects
+	for (int i = 0; i < scene.size(); i++) {
+
+		glm::vec3 point, norm;
+
+		// we hit an object
+		if (scene[i]->isSelectable && scene[i]->intersect(Ray(p, dn), point, norm)) {
+			hits.push_back(scene[i]);
+		}
+	}
+
+	// check for selection of lights
+	for (int i = 0; i < lights.size(); i++) {
+
+		glm::vec3 point, norm;
+
+		// we hit a light
+		if (lights[i]->isSelectable && lights[i]->intersect(Ray(p, dn), point, norm)) {
+			hits.push_back(lights[i]);
+		}
+	}
+
+	// if we selected more than one, pick nearest
+	SceneObject* selectedObj = NULL;
+	if (hits.size() > 0) {
+		selectedObj = hits[0];
+		float nearestDist = std::numeric_limits<float>::infinity();
+		for (int n = 0; n < hits.size(); n++) {
+			float dist = glm::length(hits[n]->position - theCam->getPosition());
+			if (dist < nearestDist) {
+				nearestDist = dist;
+				selectedObj = hits[n];
+			}
+		}
+	}
+
+	if (selectedObj) {
+		selected.push_back(selectedObj);
+		selectedObj->bSelected = true;
+		bDrag = true;
+		mouseToDragPlane(x, y, lastPoint);
+	}
+	else {
+		selected.clear();
+	}
+}
+
+void ofApp::mouseReleased(int x, int y, int button) {
+	bDrag = false;
+}
+
 void ofApp::mouseEntered(int x, int y) {}
 void ofApp::mouseExited(int x, int y) {}
 void ofApp::windowResized(int w, int h) {}
 void ofApp::dragEvent(ofDragInfo dragInfo) {}
 void ofApp::gotMessage(ofMessage msg) {}
 
+
+void ofApp::removeSceneObject(SceneObject* obj) {
+	for (int i = 0; i < scene.size(); i++) {
+		if (scene[i] == obj) {
+			scene.erase(scene.begin() + i);
+			break;
+		}
+	}
+}
+
+void ofApp::addPlane() {
+	Plane* plane = new Plane();
+	scene.push_back(plane);
+}
+
+void ofApp::addSphere() {
+	Sphere* sphere = new Sphere();
+	scene.push_back(sphere);
+	
+}
+
+void ofApp::removeLight(Light* l) {
+	for (int i = 0; i < lights.size(); i++) {
+		if (lights[i] == l) {
+			lights.erase(lights.begin() + i);
+			break;
+		}
+	}
+}
+
+void ofApp::addPointLight() {
+	Light* light = new PointLight(glm::vec3(0, 10, 0));
+	lights.push_back(light);
+}
+
+void ofApp::addAreaLight() {
+	AreaLight* light = new AreaLight(glm::vec3(0, 10, 0));
+	lights.push_back(light);
+}
+
+
+int ofApp::ext = 0;
+
 // main ray trace loop, called by 'r' button
 void ofApp::rayTrace() {
 	printf("rayTrace called\n");
+
+	// offsets for getting ray
+	float w = (ofGetWindowWidth() - imageWidth) / 2;
+	float h = (ofGetWindowHeight() - imageHeight) / 2;
 
 	// go through each pixel in image
 	for (int i = 0; i < imageWidth; i++) {
@@ -220,7 +446,9 @@ void ofApp::rayTrace() {
 			float u = (i + 0.5) / imageWidth;
 			float v = (j + 0.5) / imageHeight;
 
-			Ray ray = renderCam.getRay(u, v);
+			// render through the preview cam
+			glm::vec3 tmp = renderCam.screenToWorld(glm::vec3((u * imageWidth) + w, (v * imageHeight) + h, 0));
+			Ray ray = Ray(renderCam.getPosition(), glm::normalize(tmp - renderCam.getPosition()));
 
 			// variables to store information from intersection check
 			float distance = std::numeric_limits<float>::infinity();
@@ -250,7 +478,7 @@ void ofApp::rayTrace() {
 				ofColor color = closestObject->diffuseColor;
 				float specular = phongPower;
 
-				// check for textures
+				// check for textures closestObject->textureName != "None"
 				if (closestObject->diffuseMap.isAllocated() && closestObject->specularMap.isAllocated()) {
 					
 					// check object type (only plane/sphere)
@@ -283,18 +511,21 @@ void ofApp::rayTrace() {
 
 				if (lambertShading) color = lambert(closestPoint, normalAtIntersect, color);
 				if (phongShading) color = phong(closestPoint, normalAtIntersect, color, ofColor::lightYellow, specular);
-				image.setColor(i, imageHeight - j - 1, color);
+				image.setColor(i, j, color);
+				//image.setColor(i, imageHeight - j - 1, color); // mirror when using renderCam to render
 			}
 			else {
 				// default to background color if no object
-				image.setColor(i, imageHeight - j - 1, ofGetBackgroundColor());
+				image.setColor(i, j, ofGetBackgroundColor());
+				//image.setColor(i, imageHeight - j - 1, ofGetBackgroundColor());
 			}
 		}
 	}
 
 	// update & save image
 	image.update();
-	image.save("/renderedImages/render1.png");
+	//string fileName = "/renderedImages/render" + to_string(ofApp::ext++) + ".png";
+	image.save("/renderedImages/render" + to_string(ofApp::ext++) + ".png");
 	bRendered = true;
 
 	printf("rayTrace done\n");
@@ -369,7 +600,7 @@ ofColor ofApp::phong(const glm::vec3& p, const glm::vec3& norm,
 				float lambertCalc = glm::max(glm::dot(norm, lightDirection), 0.0f);
 
 				// specular formula
-				glm::vec3 viewDirection = glm::normalize(renderCam.position - p);
+				glm::vec3 viewDirection = glm::normalize(renderCam.getPosition() - p);
 				glm::vec3 h = glm::normalize(viewDirection + lightDirection);
 				float specularCalc = glm::pow(glm::max(glm::dot(norm, h), 0.0f), power);
 
@@ -383,96 +614,3 @@ ofColor ofApp::phong(const glm::vec3& p, const glm::vec3& norm,
 	return result;
 }
 
-
-// get texture coordinates from point on sphere
-void Sphere::getTextureCoords(glm::vec3 p, float& u, float& v) {
-
-	// project current point onto the sphere
-	glm::vec3 point = p - position;
-	float theta = asin(point.y / sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
-	float phi = atan2(point.z, point.x);
-	u = ofMap(phi, 0, 2 * PI, 0, radius * 4);
-	v = ofMap(theta, -PI, PI, 0, radius * 4);
-
-	// calculate coordinates using fmod w/ frequency of tile repetition
-	// more numTiles = less repetition
-	u = fmod(u / numTiles, 1.0f);
-	v = fmod(v / numTiles, 1.0f);
-	if (u < 0) u += 1.0f;
-	if (v < 0) v += 1.0f;
-}
-
-
-// get texture coordinates from point on plane
-void Plane::getTextureCoords(glm::vec3 p, float& u, float& v) {
-
-	// project current point onto the plane
-	glm::vec3 point = p - position;
-	u = glm::dot(point, glm::normalize(glm::cross(normal, plane.getUpDir())));
-	v = glm::dot(point, glm::normalize(plane.getUpDir()));
-
-	// calculate coordinates using fmod w/ frequency of tile repetition
-	// more numTiles = less repetition
-	u = fmod(u / numTiles, 1.0f);
-	v = fmod(v / numTiles, 1.0f);
-	if (u < 0) u += 1.0f;
-	if (v < 0) v += 1.0f;
-}
-
-// Intersect Ray with Plane  (wrapper on glm::intersect*)
-bool Plane::intersect(const Ray& ray, glm::vec3& point, glm::vec3& normalAtIntersect) {
-	float dist;
-	bool insidePlane = false;
-	bool hit = glm::intersectRayPlane(ray.p, ray.d, position, this->normal,
-		dist);
-	if (hit) {
-		Ray r = ray;
-		point = r.evalPoint(dist);
-		normalAtIntersect = this->normal;
-		glm::vec2 xrange = glm::vec2(position.x - width / 2, position.x + width
-			/ 2);
-		glm::vec2 yrange = glm::vec2(position.y - width / 2, position.y + width
-			/ 2);
-		glm::vec2 zrange = glm::vec2(position.z - height / 2, position.z +
-			height / 2);
-		// horizontal
-		if (normal == glm::vec3(0, 1, 0) || normal == glm::vec3(0, -1, 0)) {
-			if (point.x < xrange[1] && point.x > xrange[0] && point.z <
-				zrange[1] && point.z > zrange[0]) {
-				insidePlane = true;
-			}
-		}
-		// front or back
-		else if (normal == glm::vec3(0, 0, 1) || normal == glm::vec3(0, 0, -1))
-		{
-			if (point.x < xrange[1] && point.x > xrange[0] && point.y <
-				yrange[1] && point.y > yrange[0]) {
-				insidePlane = true;
-			}
-		}
-		// left or right
-		else if (normal == glm::vec3(1, 0, 0) || normal == glm::vec3(-1, 0, 0))
-		{
-			if (point.y < yrange[1] && point.y > yrange[0] && point.z <
-				zrange[1] && point.z > zrange[0]) {
-				insidePlane = true;
-			}
-		}
-	}
-	return insidePlane;
-}
-
-
-// Convert (u, v) to (x, y, z) 
-// We assume u,v is in [0, 1]
-glm::vec3 ViewPlane::toWorld(float u, float v) {
-	float w = width();
-	float h = height();
-	return (glm::vec3((u * w) + min.x, (v * h) + min.y, position.z));
-}
-
-// Get a ray from the current camera position to the (u, v) position on the ViewPlane
-Ray RenderCam::getRay(float u, float v) {
-	glm::vec3 pointOnPlane = view.toWorld(u, v);
-	return(Ray(position, glm::normalize(pointOnPlane - position)));
-}
